@@ -23,6 +23,14 @@ class DarkWebCrawler:
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 14.1; rv:109.0) Gecko/20100101 Firefox/115.0'
         ]
 
+        # KEYWORD FILTERING (Relevance)
+        # Load sensitive keywords from an external file
+        try:
+            with open('banned_keywords.txt', 'r') as f:
+                self.negative_keywords = [line.strip() for line in f]
+        except FileNotFoundError:
+            self.negative_keywords = [] # Default empty for public repo
+
         # 2. KEYWORD FILTERING (Relevance)
         # Skip results if Title/Snippet contains these
         self.negative_keywords = [
