@@ -1,0 +1,11 @@
+# Ignore Python cache and virtual environments
+__pycache__/
+*.py[cod]
+venv/
+env/
+.env
+
+# Ignore your output reports (even if you deleted the current one)
+osint_report.json
+*.json
+banned_keywords.txt
