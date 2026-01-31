@@ -5,6 +5,7 @@ import time
 import random
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+import os
 
 class DarkWebCrawler:
     def __init__(self):
@@ -32,11 +33,18 @@ class DarkWebCrawler:
             self.negative_keywords = [] # Default empty for public repo
 
         # 2. KEYWORD FILTERING (Relevance)
-        # Skip results if Title/Snippet contains these
-        self.negative_keywords = [
-            "porn", "xxx", "sex", "erotic", "adult", "casino", 
-            "drug", "cannabis", "cocaine", "hitman", "weapon", "gun"
-        ]
+        # Construct the absolute path to the text file
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(current_dir, 'banned_keywords.txt')
+
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                # Read lines, strip whitespace, and ignore empty lines
+                self.negative_keywords = [line.strip().lower() for line in f if line.strip()]
+            print(f"[*] SUCCESS: Loaded {len(self.negative_keywords)} banned keywords from {file_path}")
+        except FileNotFoundError:
+            print(f"[!] WARNING: Could not find banned_keywords.txt at: {file_path}")
+            self.negative_keywords = []
 
         # 3. ARTIFACT EXTRACTION (Data Mining)
         self.patterns = {
@@ -87,12 +95,19 @@ class DarkWebCrawler:
         return True
 
     def _extract_artifacts(self, text):
-        """Scans text for Emails, BTC addresses, etc."""
+        """Scans text for artifacts and filters them against the ban list."""
         artifacts = {}
         for key, pattern in self.patterns.items():
             matches = list(set(re.findall(pattern, text)))
-            if matches:
-                artifacts[key] = matches
+            
+            clean_matches = []
+            for m in matches:
+                # Check if the found artifact itself contains a bad word
+                if self._is_safe(m): 
+                    clean_matches.append(m)
+            
+            if clean_matches:
+                artifacts[key] = clean_matches
         return artifacts
 
     def deep_crawl_page(self, url):
